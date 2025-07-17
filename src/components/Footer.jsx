@@ -5,11 +5,10 @@ function Footer() {
       color: 'white',
       textAlign: 'center',
       padding: '15px',
-      marginTop: '20px',
-      borderRadius: '8px'
+      marginTop: '20px'
     }}>
-      <p>© {new Date().getFullYear()} My Travel Journal</p>
+      <p>© 2023 My Travel Journal</p>
     </footer>
-  )
+  );
 }
-export default Footer
+export default Footer;
