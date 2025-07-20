@@ -7,7 +7,7 @@ function App() {
   return (
     <div style={{ paddingBottom: '60px' }}>
       <Header />
-      <UserProfile name="John Doe" age={30} bio="Software Developer" />
+      <UserProfile name="John Doe" age={30} bio="Developer" />
       <MainContent />
       <Footer />
     </div>
