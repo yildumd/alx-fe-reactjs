@@ -1,69 +1,45 @@
-import useRecipeStore from './recipeStore';
+import { useRecipeStore } from "./recipeStore";
+import DeleteRecipeButton from "./DeleteRecipeButton";
+import { Link } from "react-router-dom";
+import SearchBar from "./SearchBar";
 
-const RecipeList = () => {
-  const { 
-    getFilteredRecipes, 
-    deleteRecipe, 
-    addFavorite,
-    updateRecipe
-  } = useRecipeStore();
+export default function RecipeList() {
   
-  const recipes = getFilteredRecipes();
-  const [editingId, setEditingId] = useState(null);
-  const [editTitle, setEditTitle] = useState('');
-  const [editDesc, setEditDesc] = useState('');
+  const recipes = useRecipeStore(state => state.recipes)
+  const filteredRecipes = useRecipeStore(state => state.filteredRecipes);
+  const searchTerm = useRecipeStore(state => state.searchTerm);
 
-  const handleEdit = (recipe) => {
-    setEditingId(recipe.id);
-    setEditTitle(recipe.title);
-    setEditDesc(recipe.description);
-  };
+  const recipesToDisplay = searchTerm ? filteredRecipes : recipes;
 
-  const handleUpdate = (id) => {
-    updateRecipe({
-      id,
-      title: editTitle.trim(),
-      description: editDesc.trim()
-    });
-    setEditingId(null);
-  };
+  const recipeContainer = {
+    border: '1px solid hsla(0, 0%, 100%, 0.45)',
+    borderRadius: '10px',
+    padding: '1rem',
+    marginTop: '1rem',
+    width: '650px',
+    fontSize: '1rem'
+  }
 
   return (
-    <div className="recipe-list">
-      {recipes.length === 0 ? (
-        <p>No recipes found. Add one above!</p>
-      ) : (
-        recipes.map((recipe) => (
-          <div key={recipe.id} className="recipe-card">
-            {editingId === recipe.id ? (
-              <div className="edit-form">
-                <input
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                />
-                <textarea
-                  value={editDesc}
-                  onChange={(e) => setEditDesc(e.target.value)}
-                />
-                <button onClick={() => handleUpdate(recipe.id)}>Save</button>
-                <button onClick={() => setEditingId(null)}>Cancel</button>
-              </div>
-            ) : (
-              <>
-                <h3>{recipe.title}</h3>
-                <p>{recipe.description}</p>
-                <div className="recipe-actions">
-                  <button onClick={() => addFavorite(recipe.id)}>❤️ Favorite</button>
-                  <button onClick={() => handleEdit(recipe)}>✏️ Edit</button>
-                  <button onClick={() => deleteRecipe(recipe.id)}>🗑️ Delete</button>
-                </div>
-              </>
-            )}
+    <div>
+      <SearchBar />
+      {recipesToDisplay.length > 0 ? (
+        recipesToDisplay.map(recipe => (
+          <div style={recipeContainer} key={recipe.id}>
+            <h3>{recipe.title}</h3>
+            <p>{recipe.description}</p>
+            <DeleteRecipeButton recipeId={recipe.id} />&nbsp;&nbsp;
+            <Link to={`/edit/${recipe.id}`}>
+              <button>Edit recipe</button>
+            </Link>&nbsp;&nbsp;
+            <Link to={`/recipe/${recipe.id}`}>
+              <button>View details</button>
+            </Link>
           </div>
         ))
+      ) : (
+        <p>No recipes found.</p>
       )}
     </div>
   );
-};
-
-export default RecipeList;
+}

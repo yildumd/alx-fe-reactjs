@@ -1,44 +1,28 @@
-import { useState } from 'react';
-import './App.css';
-import AddRecipeForm from './components/AddRecipeForm';
-import RecipeList from './components/RecipeList';
+import { createBrowserRouter, RouterProvider, Outlet } from 'react-router-dom';
+import './App.css'
+import AddRecipeForm from './components/AddRecipeForm'
+import RecipeList from './components/RecipeList'
+import NotFound from './components/NotFound'
+import Layout from './components/Layout'
+import EditRecipeForm from './components/EditRecipeForm';
+import RecipeDetails from './components/RecipeDetails';
 import FavoritesList from './components/FavoritesList';
-import SearchBar from './components/SearchBar';
 
-function App() {
-  const [activeTab, setActiveTab] = useState('recipes');
+export const Routes = [
+  {
+    path: '/',
+    element: <Layout />, // acts as the base layout with <Outlet />
+    children: [
+      { path: '', element: <AddRecipeForm /> },
+      { path: 'list', element: <RecipeList /> },
+      { path: 'edit/:id', element: <EditRecipeForm /> },
+      { path: 'recipe/:id', element: <RecipeDetails /> },
+      { path: 'favorites', element: <FavoritesList /> },
+      { path: '*', element: <NotFound /> },
+    ],
+  },
+];
 
-  return (
-    <div className="app">
-      <nav className="tabs">
-        <button
-          className={activeTab === 'recipes' ? 'active' : ''}
-          onClick={() => setActiveTab('recipes')}
-        >
-          All Recipes
-        </button>
-        <button
-          className={activeTab === 'favorites' ? 'active' : ''}
-          onClick={() => setActiveTab('favorites')}
-        >
-          My Favorites
-        </button>
-      </nav>
+const router = createBrowserRouter(Routes);
+export default router;
 
-      <SearchBar />
-
-      <main>
-        {activeTab === 'recipes' ? (
-          <>
-            <AddRecipeForm />
-            <RecipeList />
-          </>
-        ) : (
-          <FavoritesList />
-        )}
-      </main>
-    </div>
-  );
-}
-
-export default App;
