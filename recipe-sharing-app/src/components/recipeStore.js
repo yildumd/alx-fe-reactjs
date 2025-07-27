@@ -1,43 +1,80 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
-// recommendations
-
 export const useRecipeStore = create(
   persist(
-    (set) => ({
+    (set, get) => ({
       recipes: [],
       searchTerm: '',
-      setSearchTerm: term => set({searchTerm: term}),
-      filteredRecipes: [],
-      filterRecipes: () => set(state => ({
-        filteredRecipes: state.recipes.filter(recipe => 
-          recipe.title.toLowerCase().includes(state.searchTerm.toLowerCase())
-        )
-      })),
       favorites: [],
-      addFavorite: (recipeId) => set(state => ({ favorites: [...state.favorites, recipeId] })),
+      tags: [], // For storing all available tags
+
+      // Search functionality
+      setSearchTerm: (term) => set({ searchTerm: term }),
+      filteredRecipes: () => {
+        const { recipes, searchTerm } = get();
+        return recipes.filter(recipe => 
+          recipe.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          recipe.tags?.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+      },
+
+      // Favorites
+      addFavorite: (recipeId) => set(state => ({ 
+        favorites: [...state.favorites, recipeId] 
+      })),
       removeFavorite: (recipeId) => set(state => ({
         favorites: state.favorites.filter(id => id !== recipeId)
       })),
-      addRecipe: (newRecipe) =>
-        set((state) => ({
-          recipes: [...state.recipes, newRecipe],
-        })),
-      deleteRecipe: (id) =>
-        set((state) => ({
-          recipes: state.recipes.filter((recipe) => recipe.id !== id),
-        })),
-      updateRecipe: (id, updatedData) =>
-        set((state) => ({
-          recipes: state.recipes.map((recipe) =>
-            recipe.id === id ? { ...recipe, ...updatedData } : recipe
-          ),
-        })),
-      setRecipes: (recipes) => set({recipes})
+
+      // Recipe CRUD operations
+      addRecipe: (newRecipe) => set(state => ({
+        recipes: [...state.recipes, {
+          ...newRecipe,
+          tags: newRecipe.tags?.split(',').map(tag => tag.trim()) || []
+        }],
+        tags: [...new Set([...state.tags, ...(newRecipe.tags?.split(',').map(tag => tag.trim()) || [])])]
+      })),
+      
+      deleteRecipe: (id) => set(state => ({
+        recipes: state.recipes.filter(recipe => recipe.id !== id),
+        favorites: state.favorites.filter(favId => favId !== id)
+      })),
+      
+      updateRecipe: (id, updatedData) => set(state => ({
+        recipes: state.recipes.map(recipe =>
+          recipe.id === id ? { 
+            ...recipe, 
+            ...updatedData,
+            tags: updatedData.tags?.split(',').map(tag => tag.trim()) || recipe.tags
+          } : recipe
+        )
+      })),
+
+      // Recommendations
+      getRecommendations: () => {
+        const { recipes, favorites } = get();
+        if (favorites.length === 0) return [];
+        
+        const favoriteTags = recipes
+          .filter(recipe => favorites.includes(recipe.id))
+          .flatMap(recipe => recipe.tags || []);
+        
+        return recipes
+          .filter(recipe => 
+            !favorites.includes(recipe.id) && 
+            (recipe.tags || []).some(tag => favoriteTags.includes(tag))
+          )
+          .slice(0, 5);
+      }
     }),
     {
-      name: 'recipe-storage', // key used in localStorage
+      name: 'recipe-storage',
+      partialize: (state) => ({ 
+        recipes: state.recipes,
+        favorites: state.favorites,
+        tags: state.tags
+      })
     }
   )
 );
