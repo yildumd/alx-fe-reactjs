@@ -1,21 +1,43 @@
-import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
-import RecipeList from './components/RecipeList';
+import { useState } from 'react';
+import './App.css';
 import AddRecipeForm from './components/AddRecipeForm';
+import RecipeList from './components/RecipeList';
 import FavoritesList from './components/FavoritesList';
 import SearchBar from './components/SearchBar';
 
 function App() {
+  const [activeTab, setActiveTab] = useState('recipes');
+
   return (
-    <Router>
-      <nav>
-        <Link to="/">Home</Link> | <Link to="/favorites">Favorites</Link>
+    <div className="app">
+      <nav className="tabs">
+        <button
+          className={activeTab === 'recipes' ? 'active' : ''}
+          onClick={() => setActiveTab('recipes')}
+        >
+          All Recipes
+        </button>
+        <button
+          className={activeTab === 'favorites' ? 'active' : ''}
+          onClick={() => setActiveTab('favorites')}
+        >
+          My Favorites
+        </button>
       </nav>
+
       <SearchBar />
-      <Routes>
-        <Route path="/" element={<><AddRecipeForm /><RecipeList /></>} />
-        <Route path="/favorites" element={<FavoritesList />} />
-      </Routes>
-    </Router>
+
+      <main>
+        {activeTab === 'recipes' ? (
+          <>
+            <AddRecipeForm />
+            <RecipeList />
+          </>
+        ) : (
+          <FavoritesList />
+        )}
+      </main>
+    </div>
   );
 }
 
