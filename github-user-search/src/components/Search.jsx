@@ -13,10 +13,10 @@ export default function Search() {
     setError(null);
     
     try {
-      const data = await fetchUserData(username);
-      setUserData(data);
+      const response = await fetchUserData(username);
+      setUserData(response.data);
     } catch (err) {
-      setError('User not found');
+      setError('Looks like we cant find the user'); // Exact error message required
       setUserData(null);
     } finally {
       setLoading(false);
