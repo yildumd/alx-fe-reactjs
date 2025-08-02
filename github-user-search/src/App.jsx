@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import { fetchUserData } from './services/githubService';
+import SearchForm from './components/SearchForm';
+import UserProfile from './components/UserProfile';
 import './index.css';
 
 function App() {
@@ -26,18 +28,14 @@ function App() {
     setError(null);
 
     try {
-      const response = await axios.get(`https://api.github.com/users/${username}`, {
-        headers: {
-          'Accept': 'application/vnd.github.v3+json'
-        }
-      });
-
+      const { data, headers } = await fetchUserData(username);
+      
       // Update rate limit info
-      const remaining = parseInt(response.headers['x-ratelimit-remaining']);
-      const reset = parseInt(response.headers['x-ratelimit-reset']) * 1000;
+      const remaining = parseInt(headers['x-ratelimit-remaining']);
+      const reset = parseInt(headers['x-ratelimit-reset']) * 1000;
       setRateLimit({ remaining, reset });
 
-      setUserData(response.data);
+      setUserData(data);
 
       // Update search history
       setSearchHistory(prev => {
@@ -72,45 +70,13 @@ function App() {
           <p className="text-gray-600">Search for any GitHub user profile</p>
         </header>
 
-        <form onSubmit={handleSearch} className="mb-6">
-          <div className="flex flex-col sm:flex-row gap-2">
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Enter GitHub username"
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              {loading ? 'Searching...' : 'Search'}
-            </button>
-          </div>
-        </form>
-
-        {searchHistory.length > 0 && (
-          <div className="mb-6">
-            <p className="text-sm text-gray-500 mb-2">Recent searches:</p>
-            <div className="flex flex-wrap gap-2">
-              {searchHistory.map((item, index) => (
-                <button
-                  key={index}
-                  onClick={() => {
-                    setUsername(item);
-                    handleSearch({ preventDefault: () => {} });
-                  }}
-                  className="px-3 py-1 text-sm bg-gray-200 rounded-full hover:bg-gray-300 transition-colors"
-                >
-                  {item}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        <SearchForm 
+          username={username}
+          setUsername={setUsername}
+          loading={loading}
+          handleSearch={handleSearch}
+          searchHistory={searchHistory}
+        />
 
         <div className="text-center text-sm text-gray-500 mb-6">
           API calls remaining: {rateLimit.remaining} | 
@@ -129,53 +95,7 @@ function App() {
           </div>
         )}
 
-        {userData && (
-          <div className="bg-white p-6 rounded-lg shadow-md">
-            <div className="flex flex-col md:flex-row items-center gap-6">
-              <img
-                src={userData.avatar_url}
-                alt={userData.login}
-                className="w-32 h-32 rounded-full border-4 border-blue-100"
-              />
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold">
-                  {userData.name || userData.login}
-                  {userData.name && (
-                    <span className="text-gray-500 text-lg ml-2">({userData.login})</span>
-                  )}
-                </h2>
-                {userData.bio && <p className="text-gray-600 my-2">{userData.bio}</p>}
-                <a
-                  href={userData.html_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block mt-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  View GitHub Profile
-                </a>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="font-semibold text-gray-500">Followers</p>
-                <p className="text-2xl font-bold">{userData.followers}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="font-semibold text-gray-500">Following</p>
-                <p className="text-2xl font-bold">{userData.following}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="font-semibold text-gray-500">Repositories</p>
-                <p className="text-2xl font-bold">{userData.public_repos}</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="font-semibold text-gray-500">Location</p>
-                <p className="text-xl">{userData.location || 'Not specified'}</p>
-              </div>
-            </div>
-          </div>
-        )}
+        {userData && <UserProfile userData={userData} />}
       </div>
     </div>
   );
